@@ -50,7 +50,7 @@ ACR_PASS=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value
 
 echo "== Storage account (Postgres volume + media blobs) =="
 az storage account create --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" \
-  --location "$LOCATION" --sku Standard_LRS -o none
+  --location "$LOCATION" --sku Standard_LRS --allow-blob-public-access true -o none
 STORAGE_KEY=$(az storage account keys list --resource-group "$RESOURCE_GROUP" \
   --account-name "$STORAGE_ACCOUNT" --query "[0].value" -o tsv)
 
@@ -113,7 +113,8 @@ properties:
       minReplicas: 1
       maxReplicas: 1
 EOF
-az containerapp create --yaml /tmp/db-app.yaml -o none
+az containerapp create --name expnexus-db --resource-group "$RESOURCE_GROUP" \
+  --environment "$ENV_NAME" --yaml /tmp/db-app.yaml -o none
 
 DB_FQDN=$(az containerapp show --name expnexus-db --resource-group "$RESOURCE_GROUP" \
   --query properties.configuration.ingress.fqdn -o tsv)
