@@ -10,12 +10,16 @@ set -euo pipefail
 
 RESOURCE_GROUP="expnexus-rg"
 LOCATION="southafricanorth"
-SUFFIX=$(tr -dc 'a-z0-9' </dev/urandom | head -c 6)
+# `od -N` reads a bounded number of bytes and exits on its own, unlike piping an
+# infinite /dev/urandom stream into `head -c` — that pattern kills the upstream
+# process with SIGPIPE the instant `head` stops reading, which `set -o pipefail`
+# (correctly) treats as a fatal error even though the captured output is fine.
+SUFFIX=$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')
 ACR_NAME="expnexusacr${SUFFIX}"
 STORAGE_ACCOUNT="expnexusst${SUFFIX}"
 ENV_NAME="expnexus-env"
-PG_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)
-DJANGO_SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 50)
+PG_PASSWORD=$(od -An -N18 -tx1 /dev/urandom | tr -d ' \n')
+DJANGO_SECRET=$(od -An -N37 -tx1 /dev/urandom | tr -d ' \n')
 
 echo "== Resource group =="
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
