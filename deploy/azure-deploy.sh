@@ -25,9 +25,13 @@ echo "== Resource group =="
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
 
 echo "== Container Apps extension + resource providers =="
+# Brand-new subscriptions start with most resource providers unregistered — each
+# Azure service namespace needs a one-time registration before first use.
 az extension add --name containerapp --upgrade -o none 2>/dev/null || true
 az provider register --namespace Microsoft.App --wait
 az provider register --namespace Microsoft.OperationalInsights --wait
+az provider register --namespace Microsoft.ContainerRegistry --wait
+az provider register --namespace Microsoft.Storage --wait
 
 echo "== Container Registry =="
 az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true -o none
