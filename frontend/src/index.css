@@ -1,0 +1,58 @@
+:root {
+  --bg: #fafbfe;
+  --bg-alt: #eef1f8;
+  --surface: #ffffff;
+  --text: #10182b;
+  --text-muted: #5a6478;
+  --border: #e2e6f0;
+
+  /* Brand: red accent + deep navy from the ExpNexus logo */
+  --accent: #e51e2b;
+  --accent-hover: #c0121e;
+  --accent-soft: rgba(229, 30, 43, 0.08);
+  --navy: #0d2670;
+  --navy-deep: #071b4a;
+  --blue: #3a63c9;
+  --on-navy: #ffffff;
+  --on-navy-muted: #aebadd;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1226;
+    --bg-alt: #101a36;
+    --surface: #162244;
+    --text: #e7eaf4;
+    --text-muted: #98a4c4;
+    --border: #24325c;
+    --accent: #ff4a55;
+    --accent-hover: #ff707a;
+    --accent-soft: rgba(255, 74, 85, 0.14);
+    --navy: #0a1e59;
+    --navy-deep: #051233;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
