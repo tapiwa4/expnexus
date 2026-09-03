@@ -99,13 +99,48 @@ cookie — so a visitor who happens to be logged into `/admin/` in the same brow
 403 on an otherwise-anonymous endpoint. Hit this while building the scanner and contact
 form; both are fixed.
 
-## Before deploying
+## Deploying to Azure
 
-- Swap SQLite for Postgres in `config/settings.py` (`DATABASES`)
-- Move `SECRET_KEY` to an environment variable; set `DEBUG = False` and `ALLOWED_HOSTS`
-- Change the admin password
-- Serve `media/` (uploaded project images) from proper storage, e.g. Azure Blob
+Deploys to its own Azure subscription (`91fe7e10-...`, account `tgmututa@gmail.com`) —
+**not** the ClinSCo subscription. `deploy/azure-deploy.sh` provisions everything from
+scratch: Azure Container Registry, a Container Apps environment, self-hosted Postgres
+(Container App, pinned to 1 replica), the Django backend, and the React frontend (nginx).
+Images are built by ACR directly from source — no local Docker needed.
+
+Run from **Azure Cloud Shell** (Bash), not a local terminal, since it's already
+authenticated and avoids local `az login` issues entirely:
+
+```bash
+git clone https://github.com/tapiwa4/expnexus.git
+cd expnexus
+bash deploy/azure-deploy.sh
+```
+
+Takes several minutes (mostly the two `az acr build` steps). It prints the frontend/backend
+URLs and the generated Postgres password + Django secret key at the end — **save those**,
+they're not shown again. After it finishes:
+
+1. Create an admin user: `az containerapp exec --name expnexus-backend --resource-group expnexus-rg --command "python manage.py createsuperuser"`
+2. Log into `https://<backend-url>/admin/` and add real content (services/projects/testimonials), or issue a scanner `PremiumAccessCode`
+
+**Known risk, accepted deliberately**: Postgres's data directory sits on Azure Files
+(SMB), the only persistent-volume type Container Apps supports. Postgres's own docs warn
+against network/SMB storage for the data directory due to file-locking semantics — this
+carries real (if low-probability at light traffic) data-corruption risk. Same pattern
+ClinSCo already runs on. Since there's no managed-service automatic backup here, take your
+own periodic `pg_dump` backups once there's real content worth protecting.
+
+**Rough cost estimate** (verify against Azure's own pricing/cost calculator, rates change):
+Postgres container app runs 24/7 (~$10–15/mo at 0.5 vCPU/1GiB), backend + frontend scale to
+zero when idle (likely near/within the Consumption plan's free monthly grant for a
+low-traffic site), Container Registry Basic tier (~$5/mo), storage account (negligible).
+Ballpark **$15–25/month** total, dominated by the always-on database container.
+
+**Still TODO before this is fully production-ready**:
 - Configure a shared cache (e.g. Redis) for `CACHES` — the free-scan daily rate limit
   uses Django's cache framework, which defaults to per-process memory and won't work
-  correctly across multiple worker processes/replicas without one
-- Deploys to a separate Azure account (not the ClinSCo subscription)
+  correctly across multiple backend replicas without one
+- Change the admin password (`manage.py changepassword admin`) if you seeded the dev one
+- Wire real Stripe Checkout (see "Payment" above) once you have API keys
+- Consider code-splitting the frontend bundle — `npm run build` warns about a 647KB
+  chunk (jsPDF pulls in `html2canvas`), not urgent for current traffic levels

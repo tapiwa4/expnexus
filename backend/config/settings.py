@@ -144,14 +144,29 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media uploads (portfolio project images) go to Azure Blob Storage when configured —
+# a Container App's local disk is ephemeral and wiped on every restart/redeploy, so
+# local storage only works for local dev.
+if os.environ.get('AZURE_STORAGE_ACCOUNT_NAME'):
+    AZURE_ACCOUNT_NAME = os.environ['AZURE_STORAGE_ACCOUNT_NAME']
+    AZURE_ACCOUNT_KEY = os.environ.get('AZURE_STORAGE_ACCOUNT_KEY', '')
+    AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER', 'media')
+    MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
+    default_storage_backend = 'storages.backends.azure_storage.AzureStorage'
+else:
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    default_storage_backend = 'django.core.files.storage.FileSystemStorage'
+
 STORAGES = {
+    'default': {
+        'BACKEND': default_storage_backend,
+    },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
-
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
