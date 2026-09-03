@@ -37,11 +37,12 @@ echo "== Container Registry =="
 az acr create --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" --sku Basic --admin-enabled true -o none
 
 echo "== Building backend image (this takes a few minutes) =="
-# --file is relative to the source directory (the last argument), not the cwd.
-az acr build --registry "$ACR_NAME" --image expnexus-backend:latest --file Dockerfile ./backend
+# cd into each directory first so there's no ambiguity about what --file/source are
+# relative to (the documented "relative to source root" behavior didn't hold in practice).
+(cd backend && az acr build --registry "$ACR_NAME" --image expnexus-backend:latest .)
 
 echo "== Building frontend image =="
-az acr build --registry "$ACR_NAME" --image expnexus-frontend:latest --file Dockerfile ./frontend
+(cd frontend && az acr build --registry "$ACR_NAME" --image expnexus-frontend:latest .)
 
 ACR_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)
 ACR_USER=$(az acr credential show --name "$ACR_NAME" --query username -o tsv)
