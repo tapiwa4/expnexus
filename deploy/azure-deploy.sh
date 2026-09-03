@@ -14,12 +14,16 @@ LOCATION="southafricanorth"
 # infinite /dev/urandom stream into `head -c` — that pattern kills the upstream
 # process with SIGPIPE the instant `head` stops reading, which `set -o pipefail`
 # (correctly) treats as a fatal error even though the captured output is fine.
-SUFFIX=$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')
+#
+# SUFFIX can be overridden (e.g. `SUFFIX=74a921ea bash deploy/azure-deploy.sh`) to
+# re-run against resources a previous partial run already created, instead of
+# generating new ones and leaving the old ones orphaned.
+SUFFIX="${SUFFIX:-$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')}"
 ACR_NAME="expnexusacr${SUFFIX}"
 STORAGE_ACCOUNT="expnexusst${SUFFIX}"
 ENV_NAME="expnexus-env"
-PG_PASSWORD=$(od -An -N18 -tx1 /dev/urandom | tr -d ' \n')
-DJANGO_SECRET=$(od -An -N37 -tx1 /dev/urandom | tr -d ' \n')
+PG_PASSWORD="${PG_PASSWORD:-$(od -An -N18 -tx1 /dev/urandom | tr -d ' \n')}"
+DJANGO_SECRET="${DJANGO_SECRET:-$(od -An -N37 -tx1 /dev/urandom | tr -d ' \n')}"
 
 echo "== Resource group =="
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
@@ -54,10 +58,12 @@ az storage account create --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_
 STORAGE_KEY=$(az storage account keys list --resource-group "$RESOURCE_GROUP" \
   --account-name "$STORAGE_ACCOUNT" --query "[0].value" -o tsv)
 
+# These two error on re-run with the same SUFFIX if they already exist from a prior
+# partial run -- harmless, so don't let it be fatal under set -e.
 az storage share-rm create --resource-group "$RESOURCE_GROUP" --storage-account "$STORAGE_ACCOUNT" \
-  --name postgres-data --quota 10 -o none
+  --name postgres-data --quota 10 -o none || true
 az storage container create --name media --account-name "$STORAGE_ACCOUNT" \
-  --account-key "$STORAGE_KEY" --public-access blob -o none
+  --account-key "$STORAGE_KEY" --public-access blob -o none || true
 
 echo "== Container Apps environment =="
 az containerapp env create --name "$ENV_NAME" --resource-group "$RESOURCE_GROUP" \
@@ -113,8 +119,14 @@ properties:
       minReplicas: 1
       maxReplicas: 1
 EOF
+echo "--- db-app.yaml ---"
+cat /tmp/db-app.yaml
+echo "-------------------"
+# Deliberately NOT passing --environment here: the YAML's managedEnvironmentId already
+# fully specifies it, and combining --environment with --yaml previously triggered a
+# malformed request ("JSON value could not be converted to System.Boolean").
 az containerapp create --name expnexus-db --resource-group "$RESOURCE_GROUP" \
-  --environment "$ENV_NAME" --yaml /tmp/db-app.yaml -o none
+  --yaml /tmp/db-app.yaml -o none
 
 DB_FQDN=$(az containerapp show --name expnexus-db --resource-group "$RESOURCE_GROUP" \
   --query properties.configuration.ingress.fqdn -o tsv)
