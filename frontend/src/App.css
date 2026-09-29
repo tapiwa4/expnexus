@@ -301,6 +301,78 @@
   margin: 0;
 }
 
+.section-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+/* Process steps */
+.process-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.process-step {
+  text-align: center;
+}
+
+.process-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.process-step h3 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+#capability .btn {
+  margin-top: 8px;
+}
+
+.proof-statement {
+  font-size: 18px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text);
+  margin: 20px 0;
+}
+
+/* AI benefits */
+.ai-benefits-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 32px;
+  text-align: left;
+}
+
+.ai-benefit {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.ai-benefit h3 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
 /* Contact form */
 .contact-form {
   display: flex;

@@ -20,8 +20,10 @@ server {
         proxy_pass ${BACKEND_ORIGIN}/media/;
     }
 
-    # SPA fallback so direct navigation to e.g. /security-scan/email works.
+    # Each known route has its own prerendered index.html (see scripts/prerender.mjs) —
+    # $uri/index.html serves that real content to crawlers. Anything else (e.g. an
+    # unknown client-side route) falls back to the root SPA shell.
     location / {
-        try_files $uri /index.html;
+        try_files $uri $uri/index.html /index.html;
     }
 }

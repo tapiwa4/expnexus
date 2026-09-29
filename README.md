@@ -19,7 +19,12 @@ expnexus/
     ├── ScannerPage.tsx   # SecureMail Sentinel — "Security Check" ("/security-scan",
     │                     #   accepts email or domain) and "Email Scan"
     │                     #   ("/security-scan/email", email addresses only)
-    └── report.ts         # Client-side PDF report generation (jsPDF)
+    ├── report.ts         # Client-side PDF report generation (jsPDF, lazy-loaded)
+    ├── entry-client.tsx  # Browser entry (hydrates in prod, plain render in dev)
+    ├── entry-server.tsx  # Build-time SSR entry — see "AI & crawler visibility"
+    ├── routeMeta.ts       # Per-route <title>/<meta description>, shared by both entries
+    └── scripts/
+        └── prerender.mjs # Renders each route to static HTML after the build
 ```
 
 ## Running locally
@@ -99,6 +104,35 @@ cookie — so a visitor who happens to be logged into `/admin/` in the same brow
 403 on an otherwise-anonymous endpoint. Hit this while building the scanner and contact
 form; both are fixed.
 
+## AI & crawler visibility
+
+ExpNexus is a client-rendered React app — without extra work, a crawler that doesn't
+execute JavaScript (true of many AI crawlers, and some search bots) would see an empty
+`<div id="root">` instead of real content. `npm run build` now does real build-time
+prerendering to fix this:
+
+1. `vite build` — normal client bundle, output to `dist/client/`
+2. `vite build --ssr src/entry-server.tsx --outDir dist/server` — a Node-compatible
+   bundle that can render any route to an HTML string via `react-dom/server` + React
+   Router's `StaticRouter`
+3. `scripts/prerender.mjs` — imports that SSR bundle, renders each route in
+   `routeMeta.ts`, injects the real markup plus a route-specific `<title>`/`<meta
+   description>` into the HTML template, and writes each as its own static file
+   (`dist/client/security-scan/index.html`, etc.)
+
+The client bundle still loads and **hydrates** on top of that static HTML for full
+interactivity — visitors get the same SPA experience, crawlers get real content. nginx
+serves each route's prerendered file via `try_files $uri $uri/index.html /index.html`
+(see `nginx.conf.template`); the fallback still covers any future client-only route.
+
+`entry-client.tsx` uses `createRoot` in dev (`npm run dev` has no prerendered HTML to
+hydrate against — SSR only runs as part of `npm run build`) and `hydrateRoot` in
+production. Adding a new route: add it in `App.tsx`, add its `<title>`/description to
+`routeMeta.ts` — the build picks it up automatically.
+
+Also added: `robots.txt` and `sitemap.xml` in `frontend/public/` (**update the
+placeholder domain in `sitemap.xml` once the real one is known**).
+
 ## Deploying to Azure
 
 Deploys to its own Azure subscription (`91fe7e10-...`, account `tgmututa@gmail.com`) —
@@ -142,5 +176,7 @@ Ballpark **$15–25/month** total, dominated by the always-on database container
   correctly across multiple backend replicas without one
 - Change the admin password (`manage.py changepassword admin`) if you seeded the dev one
 - Wire real Stripe Checkout (see "Payment" above) once you have API keys
-- Consider code-splitting the frontend bundle — `npm run build` warns about a 647KB
-  chunk (jsPDF pulls in `html2canvas`), not urgent for current traffic levels
+- The Azure deploy script (`deploy/azure-deploy.sh`) builds the frontend image from
+  the `frontend/Dockerfile`, which still runs plain `npm run build` — verify the
+  updated build (SSR + prerender step) completes cleanly in that environment too
+  before relying on it; only tested locally so far

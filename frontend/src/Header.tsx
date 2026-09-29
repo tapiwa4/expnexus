@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
 const SERVICES_LINKS = [
+  { to: '/', label: 'Web Development' },
   { to: '/security-scan', label: 'Security Check' },
   { to: '/security-scan/email', label: 'Email Scan' },
 ]

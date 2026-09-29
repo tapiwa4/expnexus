@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: replace https://example-expnexus-domain.com with the real deployed domain once known -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example-expnexus-domain.com/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://example-expnexus-domain.com/security-scan</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://example-expnexus-domain.com/security-scan/email</loc>
+    <priority>0.8</priority>
+  </url>
+</urlset>

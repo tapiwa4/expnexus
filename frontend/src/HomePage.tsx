@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { submitInquiry } from './api'
 import { Logo } from './Logo'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { usePageMeta } from './routeMeta'
 import './App.css'
 
 const BUDGET_OPTIONS = [
@@ -12,6 +14,40 @@ const BUDGET_OPTIONS = [
   { value: '500_2000', label: '$500 – $2,000' },
   { value: '2000_5000', label: '$2,000 – $5,000' },
   { value: 'over_5000', label: 'Over $5,000' },
+]
+
+const AI_BENEFITS = [
+  {
+    title: 'Faster builds, lower cost',
+    description: 'AI-assisted coding and content drafting cuts build time, which can mean lower prices or faster turnaround for you.',
+  },
+  {
+    title: 'AI built into your site',
+    description: 'Chatbots, smart search, personalized content, auto-generated product descriptions — AI features baked into what we build for you.',
+  },
+  {
+    title: 'Better copy, faster',
+    description: "AI-drafted headlines and descriptions you can refine, instead of staring at a blank page.",
+  },
+]
+
+const PROCESS_STEPS = [
+  {
+    title: 'Discovery',
+    description: 'A short call to understand your business, your customers, and what the site actually needs to do.',
+  },
+  {
+    title: 'Design',
+    description: "You'll see real mockups of your site before any code is written, so there are no surprises.",
+  },
+  {
+    title: 'Build',
+    description: 'We build it fast, test it thoroughly, and keep you updated as it comes together.',
+  },
+  {
+    title: 'Launch & support',
+    description: "We launch, make sure everything works, and stick around for fixes and updates after.",
+  },
 ]
 
 function ContactForm() {
@@ -93,6 +129,8 @@ function ContactForm() {
 }
 
 export function HomePage() {
+  usePageMeta('/')
+
   return (
     <div className="app">
       <Header />
@@ -110,6 +148,52 @@ export function HomePage() {
           <div className="hero-actions">
             <a href="#contact" className="btn primary">Get a quote</a>
           </div>
+        </div>
+      </section>
+
+      <section className="section" id="web-development">
+        <div className="container center">
+          <span className="section-eyebrow">AI-Powered Web Development</span>
+          <h2>Smarter builds. Better results.</h2>
+          <div className="grid ai-benefits-grid">
+            {AI_BENEFITS.map((benefit) => (
+              <div key={benefit.title} className="ai-benefit">
+                <h3>{benefit.title}</h3>
+                <p className="muted">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section alt" id="process">
+        <div className="container">
+          <h2>How we work</h2>
+          <div className="grid process-grid">
+            {PROCESS_STEPS.map((step, i) => (
+              <div key={step.title} className="process-step">
+                <span className="process-number">{i + 1}</span>
+                <h3>{step.title}</h3>
+                <p className="muted">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="capability">
+        <div className="container narrow center">
+          <span className="section-eyebrow">Beyond websites</span>
+          <h2>We don't just design sites — we build real tools</h2>
+          <p className="muted center">
+            SecureMail Sentinel is a live security scanner we built and run ourselves — real
+            DNS, SPF/DKIM/DMARC, and blacklist checks, not a mockup. It's proof of the kind of
+            engineering that goes into everything we ship.
+          </p>
+          <p className="proof-statement">
+            “We build sites that both people and AI can actually find.”
+          </p>
+          <Link to="/security-scan" className="btn primary">Try SecureMail Sentinel</Link>
         </div>
       </section>
 

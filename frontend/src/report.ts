@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import type { ScanResult, CheckStatus } from './api'
 
 const STATUS_LABEL: Record<CheckStatus, string> = {
@@ -10,7 +9,11 @@ const STATUS_LABEL: Record<CheckStatus, string> = {
   coming_soon: 'Coming soon',
 }
 
-export function downloadScanReportPdf(result: ScanResult) {
+// jsPDF is loaded on demand rather than imported at module scope: it touches
+// browser globals that don't exist during build-time prerendering (SSR), and it's
+// a ~650KB chunk that a visitor who never clicks "download" shouldn't have to fetch.
+export async function downloadScanReportPdf(result: ScanResult) {
+  const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const marginX = 48
   const pageWidth = doc.internal.pageSize.getWidth()

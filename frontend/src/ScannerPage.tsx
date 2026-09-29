@@ -5,6 +5,7 @@ import type { CheckStatus, ScanLayer, ScanResult } from './api'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { downloadScanReportPdf } from './report'
+import { usePageMeta } from './routeMeta'
 import './App.css'
 import './ScannerPage.css'
 
@@ -58,6 +59,7 @@ function ResultLayers({ layers }: { layers: ScanLayer[] }) {
 
 export function ScannerPage({ mode = 'both' }: ScannerPageProps) {
   const emailOnly = mode === 'email'
+  usePageMeta(emailOnly ? '/security-scan/email' : '/security-scan')
 
   const [target, setTarget] = useState('')
   const [result, setResult] = useState<ScanResult | null>(null)
