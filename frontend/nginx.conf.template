@@ -14,10 +14,15 @@ server {
     # route by TLS SNI, then by Host header. Without explicitly sending the backend's
     # own hostname as SNI, the shared ingress can't tell which app we want and resets
     # the connection mid-handshake (seen as "peer closed connection in SSL handshake").
+    # proxy_http_version 1.1 + clearing Connection is required too: nginx defaults to
+    # speaking HTTP/1.0 to proxied upstreams, and Azure's edge for the backend app
+    # rejects that with 426 Upgrade Required.
     location /api/ {
         proxy_pass ${BACKEND_ORIGIN}/api/;
         proxy_ssl_server_name on;
         proxy_ssl_name $proxy_host;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -28,6 +33,8 @@ server {
         proxy_pass ${BACKEND_ORIGIN}/media/;
         proxy_ssl_server_name on;
         proxy_ssl_name $proxy_host;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_set_header Host $proxy_host;
     }
 
